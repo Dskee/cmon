@@ -3,4 +3,5 @@ var/
 __pycache__/
 *.pyc
 .idea/
-.vscode/
+.vscode/.pytest_cache/
+.ruff_cache/
