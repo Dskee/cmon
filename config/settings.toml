@@ -1,0 +1,45 @@
+[app]
+db_path = "var/cmon.db"
+out_dir = "var/out"
+day_start_hour = 8
+
+[collect]
+global_qps = 2.0
+source_qps = 1.0
+item_min_interval_min = 30
+jitter_max_sec = 5
+tick_min = 5
+
+[collect.freq_min]
+price = 120
+title = 1440
+desc = 1440
+review = 1440
+
+[collect.dedup]
+ttl_min = 90
+
+[collect.pause]
+item_fail_streak = 3
+item_pause_min = 360
+source_error_rate = 0.20
+source_window = 100
+captcha_pause_min = 120
+probe_steps = [0.1, 0.5, 1.0]
+probe_ok_needed = 3
+
+[judge]
+price_drop_pct = 0.05
+sustain_hours = 2
+baseline_days = 7
+title_token_new_min = 2
+review_topic_jump_pp = 0.20
+review_min_samples = 20
+cooldown_hours = 24
+
+[llm]
+base_url = "https://api.siliconflow.cn/v1"
+model = "deepseek-ai/DeepSeek-V4-Flash"
+timeout_sec = 45
+max_retries = 1
+temperature = 0.2

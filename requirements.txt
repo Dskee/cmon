@@ -1,0 +1,7 @@
+# 运行时依赖：无。
+#
+# 这个项目只用 Python 标准库，不需要安装任何第三方包：
+#   sqlite3 / urllib / tomllib / dataclasses / argparse / statistics / hashlib
+#
+# 要求 Python >= 3.11（tomllib 是 3.11 才进标准库的）。
+# 装开发依赖请看 requirements-dev.txt。

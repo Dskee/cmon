@@ -1,0 +1,5 @@
+# API 层依赖。核心闭环（python -m cmon run）不需要这些。
+# 打算把项目做成可被调用的服务时再装。
+fastapi>=0.115
+uvicorn[standard]>=0.30
+openai>=1.40
