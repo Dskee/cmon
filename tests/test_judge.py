@@ -99,6 +99,38 @@ def test_title_change_requires_two_new_terms(store, judge_cfg):
     assert set(two[0].evidence["price_war_terms"]) == {"限时", "直降"}
 
 
+def test_size_stock_out_fires_once_and_needs_a_previous_snapshot(store, judge_cfg):
+    """分尺码缺货：整款还有货，只有一个尺码卖光——"清库存"假设的关键证据。"""
+    judge = Judge(judge_cfg, store)
+    full = {"M": "in_stock", "L": "in_stock", "XL": "in_stock"}
+
+    # 第一次见到这个商品，没有上一份可比，不报
+    assert judge.evaluate(make_snap(T0, size_stock=full), T0) == []
+
+    one_out = {"M": "in_stock", "L": "in_stock", "XL": "out"}
+    at = T0 + timedelta(hours=2)
+    events = judge.evaluate(make_snap(at, size_stock=one_out), at)
+    assert [e.event_type for e in events] == ["SIZE_STOCK_OUT"]
+    assert events[0].evidence["sizes_out"] == ["XL"]
+    assert events[0].evidence["still_in_stock"] == ["L", "M"]
+    assert events[0].evidence["sizes_out_ratio"] == 0.33
+
+    # 同一个缺货状态不能每轮都报一次
+    later = T0 + timedelta(hours=4)
+    assert judge.evaluate(make_snap(later, size_stock=one_out), later) == []
+
+
+def test_size_stock_out_is_silent_when_the_whole_item_is_out(store, judge_cfg):
+    """整款缺货归 STOCK_OUT，别在两张卡里报同一件事。"""
+    judge = Judge(judge_cfg, store)
+    store.save_item_state("C1", last_size_stock='{"M": "in_stock", "XL": "in_stock"}',
+                          last_stock="in_stock")
+    events = judge.evaluate(
+        make_snap(T0, stock_tier="out", stock_raw=0,
+                  size_stock={"M": "out", "XL": "out"}), T0)
+    assert [e.event_type for e in events] == ["STOCK_OUT"]
+
+
 def test_stock_out_event(store, judge_cfg):
     judge = Judge(judge_cfg, store)
     store.save_item_state("C1", last_stock="in_stock")

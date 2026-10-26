@@ -5,6 +5,7 @@
 """
 from __future__ import annotations
 
+import json
 import statistics
 from datetime import datetime, timedelta
 from typing import Any
@@ -63,6 +64,7 @@ class Judge:
             )
         events += self._image_events(snap, prev_images, now)
         events += self._stock_events(snap, prev_stock, now)
+        events += self._size_stock_events(snap, state.get("last_size_stock"), now)
         events += self._review_events(snap, prev_reviews, now)
 
         self.store.save_item_state(
@@ -70,6 +72,7 @@ class Judge:
             last_final=snap.final_price,
             last_title=snap.title,
             last_stock=snap.stock_tier,
+            last_size_stock=json.dumps(snap.size_stock, ensure_ascii=False) if snap.size_stock else None,
             last_images=str(snap.image_hashes),
             last_reviews=str(snap.reviews),
             last_desc_hash=snap.desc_hash,
@@ -184,6 +187,45 @@ class Judge:
                 )
             ]
         return []
+
+    def _size_stock_events(self, snap: Snapshot, prev_raw: str | None,
+                           now: datetime) -> list[Event]:
+        """单个尺码卖光，整款仍然有货。
+
+        这一条是给"对手在清某个尺码的库存"这个假设提供证据的：整款档位看不出局部缺货，
+        而"降价 + 某尺码卖光 + 差评转向尺码"三条同时出现，才撑得起"清库存"这个判断。
+        整款都卖光时 STOCK_OUT 已经报过，这里不重复报。
+        """
+        if not prev_raw or not snap.size_stock:
+            return []
+        try:
+            before = json.loads(prev_raw)
+        except ValueError:
+            return []
+        if not isinstance(before, dict) or not before:
+            return []
+        newly_out = [size for size, tier in sorted(snap.size_stock.items())
+                     if tier == "out" and before.get(size) != "out"]
+        if not newly_out:
+            return []
+        if snap.stock_tier == "out":
+            return []                      # 整款缺货归 STOCK_OUT，别报两遍
+        still = [size for size, tier in sorted(snap.size_stock.items()) if tier != "out"]
+        if not still:
+            return []
+        return [
+            Event(
+                item_id=snap.item_id,
+                event_type="SIZE_STOCK_OUT",
+                detected_at=now,
+                evidence={
+                    "sizes_out": newly_out,
+                    "still_in_stock": still,
+                    "sizes_out_ratio": round(len(newly_out) / len(snap.size_stock), 2),
+                    "stock_tier": snap.stock_tier,
+                },
+            )
+        ]
 
     def _review_events(self, snap: Snapshot, prev_reviews: str | None, now: datetime) -> list[Event]:
         if not prev_reviews or not snap.reviews:

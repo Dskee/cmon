@@ -71,6 +71,23 @@ def test_title_change_scenario_emits_a_title_event(tmp_path):
     assert any("TITLE_CHANGE" in p.name for p in alerts)
 
 
+def test_size_clearance_scenario_aggregates_three_events(tmp_path):
+    """降价 + 某尺码卖光 + 差评转向尺码：三条证据同窗，汇总层一次吃下。"""
+    result = run("size-clearance", tmp_path)
+    metrics = result["metrics"]
+
+    assert metrics["events"] == 3
+    assert metrics["llm_calls"] == 4          # 三条解释 + 一次汇总
+    assert metrics["aggregations"] == 1
+
+    alerts = list((tmp_path / "out" / "alerts").rglob("*.md"))
+    assert any("SIZE_STOCK_OUT" in p.name for p in alerts)
+    agg = next(p for p in alerts if "AGGREGATED" in p.name)
+    body = agg.read_text(encoding="utf-8")
+    for kind in ("PRICE_DROP", "SIZE_STOCK_OUT", "REVIEW_TOPIC_SHIFT"):
+        assert kind in body
+
+
 def test_two_runs_of_the_same_scenario_agree(tmp_path):
     a = run("price-drop", tmp_path / "a")
     b = run("price-drop", tmp_path / "b")

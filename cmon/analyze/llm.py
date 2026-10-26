@@ -99,6 +99,12 @@ class StubClient(LlmClient):
             "action": "同款加投推广，把承接页的尺码与现货信息写清楚",
             "avoid": "同时提价，会浪费这次流量窗口",
         },
+        "SIZE_STOCK_OUT": {
+            "interpretation": "只有一个尺码卖光，整款还在卖——像是把那个尺码当引流款清掉了",
+            "confidence": 0.62,
+            "action": "查该尺码近 30 天成交价，确认是清仓还是断码；自家同尺码先补货再核尺码表",
+            "avoid": "看见缺货就当'对手卖不动'，清仓场景里断码是结果，不是原因",
+        },
         "IMAGE_CHANGE": {
             "interpretation": "对手换了主图，可能在测新卖点",
             "confidence": 0.55,

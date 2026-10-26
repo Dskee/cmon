@@ -71,6 +71,47 @@ SCENARIOS: dict[str, dict[str, Any]] = {
         ],
         "faults": [],
     },
+    "size-clearance": {
+        "title": "降价 + 某一尺码卖光 + 差评转向尺码：三条证据指向同一个原因",
+        "hours": 28,
+        "timeline": [
+            {
+                "at": 2.0,
+                "item": "C8848",
+                "kind": "price_drop",
+                "note": "C8848 标价 109→103，同时挂出 5 元平台券",
+                "patch": {
+                    "promo_price": 103.0,
+                    "coupons": [
+                        {"id": "CP5", "kind": "platform", "amount": 5.0,
+                         "threshold": 99.0, "allocation": 5.0}
+                    ],
+                },
+            },
+            {
+                "at": 3.0,
+                "item": "C8848",
+                "kind": "review_shift",
+                "note": "C8848 差评主题从物流转向尺码",
+                "patch": {
+                    "reviews": {"window_days": 7, "total": 344, "negative": 68,
+                                "topics": {"尺码": 0.60, "物流": 0.15,
+                                           "色差": 0.12, "质量": 0.13}},
+                },
+            },
+            {
+                "at": 4.0,
+                "item": "C8848",
+                "kind": "size_out",
+                "note": "C8848 XL 码卖光，其余尺码仍有货",
+                "patch": {
+                    "size_stock": {"M": "in_stock", "L": "in_stock",
+                                   "XL": "out", "XXL": "in_stock"},
+                },
+            },
+        ],
+        "faults": [],
+    },
     "mixed": {
         "title": "全部场景叠加：压力测试",
         "hours": 16,

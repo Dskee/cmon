@@ -29,6 +29,9 @@ class RawItem:
     group_buy: Coupon | None = None
     stock_tier: str = "in_stock"      # in_stock / low / out
     stock_raw: int = 0
+    # 分尺码库存：尺码 -> in_stock / low / out。只在一个尺码上缺货时，整款仍是"有货"，
+    # 这种"局部缺货"是判断"对手在清某个尺码的库存"的关键证据，整款档位看不出来。
+    size_stock: dict[str, str] = field(default_factory=dict)
     desc_hash: str = ""
     image_hashes: list[str] = field(default_factory=list)
     reviews: dict[str, Any] = field(default_factory=dict)
@@ -56,6 +59,7 @@ class Snapshot:
     rule_ids: list[str]
     intermediate: list[dict[str, Any]]
     stock_tier: str
+    size_stock: dict[str, str]
     title: str
     title_tokens: list[str]
     desc_hash: str
@@ -78,7 +82,7 @@ class Snapshot:
                 "rule_ids": self.rule_ids,
                 "intermediate": self.intermediate,
             },
-            "stock": {"tier": self.stock_tier},
+            "stock": {"tier": self.stock_tier, "sizes": self.size_stock},
             "title": self.title,
             "desc_hash": self.desc_hash,
             "image_hashes": self.image_hashes,

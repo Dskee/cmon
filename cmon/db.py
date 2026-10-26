@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS item_state (
     last_final     REAL,
     last_title     TEXT,
     last_stock     TEXT,
+    last_size_stock TEXT,
     last_images    TEXT,
     last_reviews   TEXT,
     last_desc_hash TEXT
@@ -71,7 +72,15 @@ class Store:
         self.conn = sqlite3.connect(self.path)
         self.conn.row_factory = sqlite3.Row
         self.conn.executescript(SCHEMA)
+        self._migrate()
         self.conn.commit()
+
+    def _migrate(self) -> None:
+        """老库补列。CREATE TABLE IF NOT EXISTS 不会给已存在的表加字段，
+        没有这一步，升级后跑到一半会报 no such column。"""
+        have = {r["name"] for r in self.conn.execute("PRAGMA table_info(item_state)")}
+        if "last_size_stock" not in have:
+            self.conn.execute("ALTER TABLE item_state ADD COLUMN last_size_stock TEXT")
 
     def close(self) -> None:
         self.conn.close()

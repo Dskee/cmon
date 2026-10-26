@@ -24,7 +24,8 @@ from cmon.config import load  # noqa: E402
 from cmon.pipeline import Pipeline  # noqa: E402
 
 SCENARIOS = [
-    ("price-drop", "价格直降 + 差评转向 + 汇总"),
+    ("price-drop", "价格直降 + 差评转向（两条证据，无共同原因）"),
+    ("size-clearance", "降价 + 某尺码卖光 + 差评转向（三条证据指向同一原因）"),
     ("fault-storm", "429 连击 + 验证码 + 超时"),
     ("empty-silent", "返回 200 但字段为空"),
     ("title-change", "标题加入价格战信号词"),
@@ -83,6 +84,9 @@ def main() -> None:
             checks.append(("价格下降出告警", m.get("events", 0) == 2))
             checks.append(("同窗事件触发汇总", m.get("aggregations", 0) == 1))
             checks.append(("跨租户去重省下请求", m.get("requests_saved_cross_tenant", 0) > 0))
+        if name == "size-clearance":
+            checks.append(("分尺码缺货被单独判出来", m.get("events", 0) == 3))
+            checks.append(("三条证据一次汇总", m.get("aggregations", 0) == 1))
         if name == "fault-storm":
             checks.append(("故障连击后自动暂停", len(announced) >= 1))
             checks.append(("不产生假事件", m.get("events", 0) == 0))
@@ -101,7 +105,7 @@ def main() -> None:
     lines = [
         "# 故障注入实验",
         "",
-        "同一个可执行体，五个场景，同一套配置。数字由 `python experiments/fault_injection.py` 现场跑出来，",
+        "同一个可执行体，六个场景，同一套配置。数字由 `python experiments/fault_injection.py` 现场跑出来，",
         "不是估算——这一页的作用是让人可以自己跑一遍复核。",
         "",
         "| 场景 | 说明 | 模拟窗口 | 请求数 | 实测峰值 QPS | 跨租户去重 | 事件 | 模型调用 | 自动暂停 | 墙钟 |",
