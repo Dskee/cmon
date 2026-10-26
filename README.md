@@ -125,6 +125,11 @@ CMON_UI_PORT=7870 python -m cmon.ui       # 换端口
 这一层不产生任何新数字——指标、卡片、日报全部来自 `python -m cmon run` 的同一次运行，
 `cmon/runs.py` 只负责跑完把结果收好，`cmon/ui.py` 只负责摆。想换前端，改 `ui.py` 一个文件。
 
+![界面](docs/ui.png)
+
+（截图是暗色主题下的实际渲染，开屏那一次 `size-clearance` 离线运行：70 次请求、3 个事件、
+4 次模型调用，右侧四个页签分别看指标、卡片、日报和实验数据。）
+
 HTTP 层：
 
 ```bash
@@ -170,6 +175,7 @@ cmon/source.py         数据源接口（三个成员，换源只动这里）
 cmon/api.py            HTTP 层（四个端点，不参与判定）
 cmon/runs.py           一次运行的封装（跑、收卡片、整理指标，不 import 界面库）
 cmon/ui.py             Gradio 界面（四个页签，只负责摆）
+docs/ui.png            界面截图
 tests/                 97 个测试
 experiments/           故障注入实验、真实模型冒烟、方案文档同步脚本
 ```
