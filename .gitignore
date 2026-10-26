@@ -2,6 +2,10 @@
 var/
 __pycache__/
 *.pyc
-.idea/
-.vscode/.pytest_cache/
+.pytest_cache/
 .ruff_cache/
+.idea/
+.vscode/
+# gradio 跑起来会建这两个
+.gradio/
+flagged/

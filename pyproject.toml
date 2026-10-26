@@ -9,6 +9,12 @@ description = "可控的电商商品与竞品监控调度器：三层限流、�
 requires-python = ">=3.11"
 dependencies = []
 
+# 核心链路零依赖，这三组都是加装的
+[project.optional-dependencies]
+ui = ["gradio>=6.0"]
+api = ["fastapi>=0.115", "uvicorn[standard]>=0.30"]
+dev = ["pytest>=8.0", "ruff>=0.6.0", "httpx>=0.27"]
+
 [project.scripts]
 cmon = "cmon.cli:main"
 

@@ -1,0 +1,7 @@
+# 界面层要装的东西。不装也能跑：核心链路只用标准库。
+#
+#   pip install -r requirements-ui.txt
+#   python -m cmon.ui
+#
+# 装的是 gradio 6（4.x/5.x 的 launch() 参数不一样，别混）。
+gradio>=6.0

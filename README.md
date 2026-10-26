@@ -2,6 +2,7 @@
 
 把《贺梦阳-淘宝商品与竞品监控Agent方案-27届》那套设计落成一个能跑的单机系统。
 运行时零第三方依赖，只用标准库（sqlite3 / urllib / tomllib / dataclasses / argparse）。
+界面层和 HTTP 层是可选加装：不装 gradio / fastapi，核心链路照样跑。
 
 ## 一句话定位
 
@@ -15,9 +16,10 @@
 能跑：
 
 - 六套场景端到端跑通，一条命令出告警卡片和日报
-- 87 个测试（限流、去重、状态机、到手价还原、判定边界、模型契约、数据源契约、HTTP 层）
+- 97 个测试（限流、去重、状态机、到手价还原、判定边界、模型契约、数据源契约、HTTP 层、界面层）
 - 故障注入实验，现跑现出数字，写在 `var/out/experiments.md`
 - 真实模型往返已打通（硅基流动 `deepseek-ai/DeepSeek-V4-Flash`），数字见下一节
+- Gradio 界面：选场景、点一下、指标/卡片/日报/实验数据四个页签
 
 没验证：
 
@@ -69,8 +71,9 @@
 两次都对。差别不在提示词，在证据够不够。想让它编出漂亮的因果链，改 prompt 就行，但那只是
 更好听的空话——所以这里选的是补数据，不是补措辞。
 
-`stock.sizes` 是方案文档 schema 之外新增的字段（文档里只有 `stock.tier`）。文档是交稿版，
-没动；实现多这一层，是因为整款档位看不出局部缺货。
+`stock.sizes` 是方案文档 schema 之外新增的字段（文档里只有 `stock.tier`）。多这一层，是因为
+整款档位看不出局部缺货。文档已同步：schema 补了 `sizes`，事件表加了一行"分尺码缺货"，
+PDF 重出过（`experiments/_sync_doc.py` 就是那次改动的脚本，可复查改了哪三处）。
 
 ## 为什么没有爬虫
 
@@ -104,10 +107,23 @@ python -m cmon report                     # 汇总指标
 测试与实验：
 
 ```bash
-python -m pytest -q                       # 87 个测试
+python -m pytest -q                       # 97 个测试
 python experiments/fault_injection.py     # 六个场景跑一遍，出数字
 python experiments/llm_smoke.py           # 真实模型冒烟（没余额会明确说明）
 ```
+
+界面：
+
+```bash
+python -m cmon.ui                         # 起在 127.0.0.1:7861
+CMON_UI_PORT=7870 python -m cmon.ui       # 换端口
+```
+
+界面四个页签：运行指标（含采集日志）、告警卡片、日报、实验数据。开屏自动跑一次
+`size-clearance` 的离线版，落地也直接有东西看。
+
+这一层不产生任何新数字——指标、卡片、日报全部来自 `python -m cmon run` 的同一次运行，
+`cmon/runs.py` 只负责跑完把结果收好，`cmon/ui.py` 只负责摆。想换前端，改 `ui.py` 一个文件。
 
 HTTP 层：
 
@@ -152,8 +168,10 @@ cmon/analyze/          模型解释 + JSON 契约校验（可 stub）
 cmon/output/           告警卡片、日报
 cmon/source.py         数据源接口（三个成员，换源只动这里）
 cmon/api.py            HTTP 层（四个端点，不参与判定）
-tests/                 87 个测试
-experiments/           故障注入实验、真实模型冒烟
+cmon/runs.py           一次运行的封装（跑、收卡片、整理指标，不 import 界面库）
+cmon/ui.py             Gradio 界面（四个页签，只负责摆）
+tests/                 97 个测试
+experiments/           故障注入实验、真实模型冒烟、方案文档同步脚本
 ```
 
 ## 配置里最该看的六个值
