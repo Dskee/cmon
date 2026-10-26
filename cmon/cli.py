@@ -42,7 +42,9 @@ def cmd_report(args: argparse.Namespace) -> int:
     date = args.date or "latest"
     path = card_mod.write_daily(cfg.out_dir, date, events, metrics)
     print(f"日报已生成：{path}")
-    print(f"快照 {store.snapshot_count()} 条，事件 {store.event_count()} 个")
+    agg = int(metrics.get("aggregations", 0))
+    print(f"快照 {store.snapshot_count()} 条，卡片 {store.event_count()} 张"
+          f"（判定事件 {int(metrics.get('events', 0))} + 汇总 {agg}）")
     for name, value in sorted(metrics.items()):
         print(f"  {name}: {value:g}")
     store.close()
