@@ -27,6 +27,7 @@ class LlmClient:
 class SiliconFlowClient(LlmClient):
     def __init__(self, cfg: LlmConfig) -> None:
         self.cfg = cfg
+        self.last_usage: dict[str, int] = {}
         if not cfg.api_key:
             raise LlmError("缺少 CMON_LLM_API_KEY，改用 --offline 或填写 .env")
 
@@ -64,6 +65,7 @@ class SiliconFlowClient(LlmClient):
             raise LlmError(f"网络异常: {exc}") from exc
 
         try:
+            self.last_usage = payload.get("usage") or {}
             return payload["choices"][0]["message"]["content"]
         except (KeyError, IndexError) as exc:
             raise LlmError(f"响应结构不符: {payload}") from exc

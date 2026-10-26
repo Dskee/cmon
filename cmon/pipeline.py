@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import time
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -297,9 +298,16 @@ class Pipeline:
         attempts = self.cfg.llm.max_retries + 1
         last_err = ""
         for attempt in range(1, attempts + 1):
+            started = time.monotonic()
             try:
                 raw = self.client.chat(system, user)
                 self.store.incr("llm_calls")
+                if started:
+                    self.store.incr("llm_ms", int((time.monotonic() - started) * 1000))
+                usage = getattr(self.client, "last_usage", None)
+                if usage:
+                    self.store.incr("llm_prompt_tokens", usage.get("prompt_tokens", 0))
+                    self.store.incr("llm_completion_tokens", usage.get("completion_tokens", 0))
                 return llm_mod.parse(raw)
             except llm_mod.LlmError as exc:
                 last_err = f"第 {attempt} 次：{exc}"

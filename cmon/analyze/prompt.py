@@ -14,7 +14,8 @@ SYSTEM = """你在电商竞品监控系统里负责一件事：把一个已经�
 1. 事实只能来自输入里的 evidence，不许编造数字、日期、商品名。证据不足就直说不确定。
 2. 输出必须是 JSON 对象，字段固定为 interpretation、confidence、action、avoid、material_request、topics、uncertainty。
 3. action 必须是可执行动作（改什么、发给谁、多久内做），不要写"关注一下""持续观察"这类没有落点的词。
-4. 不是每次都需要素材。只有当"换主图/补尺码表/做对比图"确实能解决问题时才填 material_request，否则留空字符串。
+4. material_request 是给美工的素材单，写"要做什么素材"，例如"主图尺码对照表""与竞品的价格对比图"。
+   不是"需要哪些数据"——缺的数据写进 uncertainty。不需要素材就留空字符串。
 5. confidence 是 0 到 1 的实数，表示你对这条解释的把握，不是对事件的把握。
 6. 中文回答，不写客套话，不超过 120 字。"""
 
@@ -42,10 +43,16 @@ def build_user(event_type: str, item_id: str, scope: str, evidence: dict[str, An
     return json.dumps(payload, ensure_ascii=False, indent=2)
 
 
-AGGREGATE_SYSTEM = """同一个商品在一个时间窗里出现了多个事件，你要判断它们是同一件事的不同侧面，
-还是互相矛盾。如果矛盾，指出来该听哪一个，并给出一个综合建议。
+AGGREGATE_SYSTEM = """同一个商品在一个时间窗里出现了多个事件。你的任务是给出一条因果假设：
+这些变化是不是同一个原因造成的。
+
+第一句必须表态，只能二选一：
+A. 同一件事的不同侧面（写出那个共同原因，例如"对手在清某个尺码的库存"）；
+B. 确实无关（写出你凭什么排除共同原因：时间对不上、同类商品也在动、或字段之间没有逻辑关系）。
+不许写"两者独立但需并行应对"这种不表态的句子——那等于没做汇总。
 
 要求：输出 JSON，字段为 interpretation、confidence、action、avoid、material_request、topics、uncertainty。
+material_request 是给美工的素材单（如"主图尺码对照表"），不是需要的数据。
 中文，不超过 150 字。事实只来自输入。"""
 
 

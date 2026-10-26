@@ -40,6 +40,6 @@ cooldown_hours = 24
 [llm]
 base_url = "https://api.siliconflow.cn/v1"
 model = "deepseek-ai/DeepSeek-V4-Flash"
-timeout_sec = 45
+timeout_sec = 90   # 实测一次解释约 31 秒；45 秒只剩 14 秒余量，太紧
 max_retries = 1
 temperature = 0.2
