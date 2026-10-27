@@ -20,14 +20,17 @@
 - 故障注入实验，现跑现出数字，写在 `var/out/experiments.md`
 - 真实模型往返已打通（硅基流动 `deepseek-ai/DeepSeek-V4-Flash`），数字见下一节
 - Gradio 界面：选场景、点一下、指标/卡片/日报/实验数据四个页签
+- 镜像可构建可运行：`docker build -t cmon:check .` 0.7 秒、镜像 182MB（基础镜像
+  `python:3.12-slim`），`docker run --rm cmon:check` 退出码 0、输出与本地一致
+  （70 次请求、2 个事件、3 次模型调用）。国内直连 Docker Hub 拉基础镜像会卡在半路，
+  构建前先从镜像站拉再打 tag：`docker pull docker.1ms.run/library/python:3.12-slim`
+  然后 `docker tag docker.1ms.run/library/python:3.12-slim python:3.12-slim`
 
 没验证：
 
 - 真实淘宝接口。没有开放平台权限，也拿不到能合规调用的竞品字段。
   能验证的部分做了：`cmon/source.py` 把"换源要动哪里"固定成三个成员，
   `tests/test_source.py` 用二十行假源证明这个契约够用
-- `Dockerfile` 没在本机验证过——这台机器的 Docker daemon 没起。
-  镜像里只有 `cp` 和一条 `CMD`，核心零依赖，但没跑过的事不写成跑过
 
 这条不是遗漏，是刻意的边界：没验证的事就不写成验证过。
 
